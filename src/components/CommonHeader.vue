@@ -10,7 +10,10 @@
                         <Menu />
                     </el-icon>
                 </el-button>
-                <h3>首页</h3>
+                <el-breadcrumb separator="/">
+                    <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+                    <el-breadcrumb-item :to="{name: current.name}" v-if="current">{{current.label}}</el-breadcrumb-item>
+                </el-breadcrumb>
             </div>
             <div class="r-content">
                 <el-dropdown>
@@ -29,6 +32,7 @@
     </div>
 </template>
 <script>
+import { computed } from "@vue/reactivity"
 import { useStore } from "vuex"
 export default {
     // data() {
@@ -38,12 +42,15 @@ export default {
     //     }
     // }
     setup() {
-        let  store = useStore()
+        let store = useStore()
         const userHeader = new URL('../assets/userHeader.png', import.meta.url).href
         let hanleClose = () => {
             console.log('点击按钮了')
             store.commit('updateIsCollapse')
         }
+        const current = computed(() => {
+            return store.state.currentMenu
+        })
         return {
             size: 'small',
             color: '#09bb07',
@@ -51,6 +58,7 @@ export default {
                 // img: 'https://th.bing.com/th/id/OIP.JPaFw0vH2f6Qy44aUfZ4jgAAAA'
                 img: userHeader
             },
+            current,
             hanleClose
         }
     }
@@ -74,6 +82,12 @@ export default {
 
         h3 {
             color: #fff;
+        }
+        .el-breadcrumb {
+            & /deep/ span {
+                color: #fff!important;
+                cursor: pointer;
+            }
         }
     }
 

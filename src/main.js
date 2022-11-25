@@ -17,8 +17,15 @@ app.use(store)
 // 引入公用样式
 import './assets/less/index.less';
 
-// 引入icon图标
+// 引入element-plus icon图标
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+
+// 引入本地mockjs模拟数据
+import './api/mock'
+
+// 引入api
+import api from './api/api'
+app.config.globalProperties.$api = api
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
