@@ -25,54 +25,203 @@
                 </el-table>
             </el-card>
         </el-col>
-        <el-col :span="16"></el-col>
+        <el-col :span="16">
+            <div class="count">
+                <el-card v-for="item in countData" :body-style="{ padding: 0, display: 'flex' }" :key="item.name">
+                    <component class="icons" :is="item.icon" :style="{ backgroundColor: item.color }"></component>
+                    <div class="detail">
+                        <p class="num">
+                            ￥{{ item.value }}
+                        </p>
+                        <p class="text">
+                            {{ item.name }}
+                        </p>
+                    </div>
+                </el-card>
+            </div>
+            <div>
+                <el-card style="height: 280px">
+                    <div ref="echarts1" style="height: 280px"></div>
+                </el-card>
+            </div>
+            <div class="graph">
+                <el-card style="height: 260px">
+                    <div ref="echarts2" style="height: 240px"></div>
+                </el-card>
+                <el-card style="height: 260px">
+                    <div ref="echarts3" style="height: 240px"></div>
+                </el-card>
+            </div>
+        </el-col>
     </el-row>
 </template>
 <script setup>
-let tableData = [
-    {
-        "name": "小米",
-        "todayBuy": 395,
-        "monthBuy": 1031,
-        "totalBuy": 4786
-    },
-    {
-        "name": "苹果",
-        "todayBuy": 321,
-        "monthBuy": 826,
-        "totalBuy": 3719
-    },
-    {
-        "name": "三星",
-        "todayBuy": 183,
-        "monthBuy": 696,
-        "totalBuy": 9945
-    },
-    {
-        "name": "oppo",
-        "todayBuy": 487,
-        "monthBuy": 735,
-        "totalBuy": 2978
-    },
-    {
-        "name": "华为",
-        "todayBuy": 345,
-        "monthBuy": 1445,
-        "totalBuy": 4361
-    },
-    {
-        "name": "魅族",
-        "todayBuy": 352,
-        "monthBuy": 504,
-        "totalBuy": 2801
-    }
-]
+import { getCurrentInstance, onMounted, reactive, ref } from 'vue'
+import * as echarts from 'echarts'
+import { xor } from 'lodash';
+// import axios from 'axios'
+const { proxy } = getCurrentInstance()
+
+let tableData = ref([])
+let countData = ref([])
 let tableLabel = {
     name: '课程',
     todayBuy: '今日购买',
     monthBuy: '本月购买',
     totalBuy: '总购买'
 }
+const getTableList = async () => {
+    // 本地mock
+    // await axios.get('/home/getData').then((res) => {
+    //     console.log(res);
+    //     tableData.value = res.data.data.tableData
+    // })
+    // 远程mock
+    // await axios.get('http://129.204.116.48:3000/mock/52fa1b6b0d82f201dd7e3609ffd86fcb/api/home/getTableData').then((res) => {
+    //     console.log(res);
+    //     if (res.data.code == 200) {
+    //         tableData.value = res.data.data.tableData
+    //     }
+    // })
+    // 调用封装后的api
+    let res = await proxy.$api.getTableData()
+    console.log('获取到的表格数据', res)
+    tableData.value = res.tableData
+}
+const getCountData = async () => {
+    let res = await proxy.$api.getCountData()
+    console.log('获取统计数据', res)
+    countData.value = res
+}
+
+// 图表默认配置
+let xOptions = reactive({
+    legend: {
+        textStyle: {
+            color: '#333'
+        }
+    },
+    grid: {
+        left: '20%'
+    },
+    tooltip: {
+        trigger: 'axis'
+    },
+    xAxis: {
+        type: 'category',
+        data: [],
+        axisLine: {
+            lineStyle: {
+                color: '#17b3a3'
+            }
+        },
+        axisLabel: {
+            interval: 0,
+            color: '#333'
+        }
+    },
+    yAxis: {
+        type: 'value',
+        axisLine: {
+            lineStyle: {
+                color: "#17b3a3"
+            }
+        }
+    },
+    color: ['#2ec7c9', '#b6a2de', '#ffb980', '#d87a80', '#8d98b3'],
+    series: []
+})
+let pieOptions = reactive({
+    tooltip: {
+        trigger: 'item'
+    },
+    color: [
+        '#0f78f4',
+        '#dd536b',
+        '#9462e5',
+        '#a6a6a6',
+        '#e1bb22',
+        '#39c362',
+        '#3ed1cf',
+    ],
+    series: []
+})
+let orderData = reactive({
+    xData: [],
+    series: [],
+})
+let userData = reactive({
+    xData: [],
+    series: [],
+})
+
+let videoData = reactive({
+    series: []
+})
+
+const getChartData = async () => {
+    let res = await proxy.$api.getChartData()
+    console.log('获取图表数据', res)
+    // countData.value = res
+    const videoRes = res.videoData
+    const userRes = res.userData
+    const orderRes = res.orderData
+    orderData.xData = orderRes.date
+    const keyArray = Object.keys(orderRes.data[0])
+    const series = []
+    keyArray.forEach((key) => {
+        series.push({
+            name: key,
+            data: orderRes.data.map((item) => {
+                return item[key]
+            }),
+            type: 'line'
+        })
+    })
+    orderData.series = series
+    xOptions.xAxis.data = orderData.xData
+    xOptions.series = orderData.series
+    let hEcharts = echarts.init(proxy.$refs['echarts1'])
+    hEcharts.setOption(xOptions)
+    userData.xData = userRes.map((item) => {
+        return item.date
+    })
+    userData.series = [
+        {
+            name: '新增用户',
+            data: userRes.map((item) => {
+                return item.new
+            }),
+            type: 'bar'
+        },
+        {
+            name: '活跃用户',
+            data: userRes.map((item) => {
+                return item.active
+            }),
+            type: 'bar'
+        }
+    ]
+    xOptions.xAxis.data = userData.xData
+    xOptions.series = userData.series
+    let echarts2 = echarts.init(proxy.$refs['echarts2'])
+    echarts2.setOption(xOptions)
+    videoData.series = [
+        {
+            data: videoRes,
+            type: 'pie'
+        }
+    ]
+    pieOptions.series = videoData.series
+    let echarts3 = echarts.init(proxy.$refs['echarts3'])
+    echarts3.setOption(pieOptions)
+}
+onMounted(() => {
+    console.log('页面mounted')
+    getTableList()
+    getCountData()
+    getChartData()
+})
 </script>
 <style lang="less" scoped>
 .home {
@@ -108,6 +257,53 @@ let tableLabel = {
 
     .history {
         margin-top: 20px;
+    }
+
+    .count {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+
+        .el-card {
+            width: 32%;
+            margin-bottom: 20px;
+
+            .icons {
+                width: 80px;
+                height: 80px;
+                line-height: 80px;
+                color: #fff;
+                text-align: center;
+            }
+
+            .detail {
+                margin-left: 15px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                text-align: center;
+
+                .num {
+                    font-size: 30px;
+                    margin-bottom: 10px;
+                }
+
+                .text {
+                    font-size: 14px;
+                    color: #999;
+                }
+            }
+        }
+    }
+
+    .graph {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+
+        .el-card {
+            width: 48%;
+        }
     }
 }
 </style>

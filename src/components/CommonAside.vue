@@ -40,6 +40,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useStore } from 'vuex';
 const list = [
     {
         path: '/home',
@@ -87,6 +88,7 @@ const list = [
     },
 ]
 const router = useRouter()
+const store = useStore()
 const noChildren = () => {
     return list.filter(item => {
         return !item.children
@@ -107,6 +109,7 @@ let clickMenu = (item) => {
     router.push({
         name: item.name
     })
+    store.commit('selectMenu', item)
 }
 </script>
 <style lang="less" scoped>
