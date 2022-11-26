@@ -10,10 +10,6 @@ const app = createApp(App)
 
 // app.use(ElementPlus)
 
-// 引入路由和store
-app.use(router)
-app.use(store)
-
 // 引入公用样式
 import './assets/less/index.less';
 
@@ -26,6 +22,13 @@ import './api/mock'
 // 引入api
 import api from './api/api'
 app.config.globalProperties.$api = api
+
+// 调取本地缓存数据
+store.commit('addMenu', router)
+
+// 引入路由和store
+app.use(router)
+app.use(store)
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)

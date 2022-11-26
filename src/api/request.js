@@ -7,7 +7,8 @@ import { ElMessage } from 'element-plus'
 const NETWORK_ERROR = '网络请求异常，请稍后重试'
 
 const service = axios.create({
-    baseURL: config.baseApi
+    baseURL: config.baseApi,
+    timeout: 30000
 })
 
 // 拦截请求
