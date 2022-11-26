@@ -1,5 +1,5 @@
 <template>
-    <el-aside>
+    <div class="component-aside" :style="`height:${bodyHeight}px`">
         <el-menu default-active="2" class="el-menu-vertical-demo" background-color="#545c64" text-color="#fff"
             :collapse="$store.state.isCollapse" @open="handleOpen" @close="handleClose" :collapse-transition="false">
             <h3 v-show="!$store.state.isCollapse">
@@ -35,12 +35,13 @@
                 </el-menu-item-group>
             </el-sub-menu>
         </el-menu>
-    </el-aside>
+    </div>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex';
+let bodyHeight = ref(400)
 const list = [
     {
         path: '/home',
@@ -61,7 +62,7 @@ const list = [
     },
     {
         path: '/user',
-        name: 'User',
+        name: 'user',
         label: '用户管理',
         icon: 'user',
         url: 'User.vue'
@@ -89,13 +90,15 @@ const list = [
 ]
 const router = useRouter()
 const store = useStore()
+const asyncList = store.state.menu
+let observer = null // 监听页面元素变化
 const noChildren = () => {
-    return list.filter(item => {
+    return asyncList.filter(item => {
         return !item.children
     })
 }
 const hasChildren = () => {
-    return list.filter(item => {
+    return asyncList.filter(item => {
         return item.children
     })
 }
@@ -111,10 +114,43 @@ let clickMenu = (item) => {
     })
     store.commit('selectMenu', item)
 }
+onMounted(() => {
+    bodyHeight.value = document.body.scrollHeight
+    // window.addEventListener('resize', () => {
+    //     bodyHeight.value = document.body.scrollHeight
+    // })
+    let MutationObserver = window.MutationObserver
+        || window.WebKitMutationObserver
+        || window.MozMutationObserver
+        console.log('MutationObserver', MutationObserver)
+    // 选择目标节点
+    let target = document.body
+    // 创建观察者对象
+    observer = new MutationObserver(function (mutations) {
+        console.log(`MutationObserver 触发了`)
+        if (bodyHeight.value != document.body.clientHeight) {
+            bodyHeight.value = document.body.clientHeight
+            console.log('body高度变化了', bodyHeight.value)
+        }
+    })
+    // 配置观察选项:
+    let config = {
+        attributes: true
+    }
+    // 传入目标节点和观察选项
+    observer.observe(target, config)
+})
+onUnmounted(() => {
+    // window.removeEventListener('resize', () => {})
+    if (observer) {
+        observer.disconnect()
+    }
+})
 </script>
 <style lang="less" scoped>
-.el-aside {
+.component-aside {
     overflow-x: hidden;
+
     h3 {
         text-align: center;
         color: #fff;

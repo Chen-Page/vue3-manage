@@ -10,7 +10,7 @@
                 </el-header>
                 <el-main>
                     <common-tag></common-tag>
-                    <router-view></router-view>
+                    <router-view class="right-main"></router-view>
                 </el-main>
             </el-container>
         </el-container>
@@ -33,16 +33,30 @@ export default defineComponent({
 .common-layout {
     height: 100%;
 
-    & > .el-container {
-        height: 100%;
+    &>.el-container {
+        // height: 100%;
         align-items: baseline;
-        & > .el-aside {
-            height: 100%;
+
+        &>.el-aside {
+            // height: 100%;
             background-color: #545c64;
             overflow-x: hidden;
         }
+
         .el-header {
             padding: 0;
+        }
+
+        .right-main {
+            height: calc(100% - 124px) !important;
+        }
+
+        .el-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #333;
+            padding: 0 20px;
         }
     }
 }

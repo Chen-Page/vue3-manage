@@ -58,9 +58,9 @@
 <script setup>
 import { getCurrentInstance, onMounted, reactive, ref } from 'vue'
 import * as echarts from 'echarts'
-import { xor } from 'lodash';
 // import axios from 'axios'
 const { proxy } = getCurrentInstance()
+
 
 let tableData = ref([])
 let countData = ref([])
